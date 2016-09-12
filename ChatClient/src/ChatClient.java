@@ -15,18 +15,25 @@ public class ChatClient implements Runnable {
     ChatClient(String serverName, int serverPort) throws IOException { //Create new Socket and start Thread
         socket = new Socket(serverName, serverPort);
         System.out.println("Connected: " + socket);
-        start();
         System.out.print("Write your nickname: ");
     }
 
+    public void open(){
+        streamIn = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            streamOut = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void start() throws IOException {  //start Thread, open IO streams, create ChatClientThread and start his Thread
-        streamIn = new BufferedReader(new InputStreamReader(System.in));
-        streamOut = new DataOutputStream(socket.getOutputStream());
+        open();
         if(thread==null){
             client = new ChatClientThread(this,socket);
             thread = new Thread(this);
             thread.start();
+            client.start();
         }
     }
 
@@ -38,6 +45,7 @@ public class ChatClient implements Runnable {
         if(splited[0].equalsIgnoreCase("-") && splited[1].equalsIgnoreCase("getfile")) {
             client.file = true;
             fileTransfer = new FileTransfer(this, client, socket, Integer.parseInt(splited[2]));
+            fileTransfer.start();
         }
         else {
             System.out.println(msg);
@@ -62,8 +70,11 @@ public class ChatClient implements Runnable {
     public static void main(String[] args) throws IOException {
         ChatClient client = null;
         if(args.length<2){
-            System.out.println("Usage: jaav ChatClient server port nickname");
+            System.out.println("Usage: jaav ChatClient server port");
         }
-        else client =new ChatClient(args[0],Integer.parseInt(args[1]));
+        else {
+            client =new ChatClient(args[0],Integer.parseInt(args[1]));
+            client.start();
+        }
     }
 }

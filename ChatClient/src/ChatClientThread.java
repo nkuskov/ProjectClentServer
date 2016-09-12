@@ -15,14 +15,13 @@ public class ChatClientThread extends Thread {
         socket = _socket;
         client = _client;
         open();
-        start();
     }
 
 
 
     public void open() throws IOException {
         streamIn = new DataInputStream(socket.getInputStream());
-        fileIn = socket.getInputStream(); // only for filetransfering
+         // only for filetransfering
     }
 
     public void run(){

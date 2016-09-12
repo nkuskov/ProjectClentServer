@@ -19,7 +19,6 @@ public class ChatServer implements Runnable{
             System.out.println("Binding ro the port " + port + ", please wait");
             server = new ServerSocket(port);
             System.out.println("Server started: " + server);
-            start();
         }
 
         catch(Exception e){
@@ -144,6 +143,7 @@ public class ChatServer implements Runnable{
         }
         else {
             server = new ChatServer(Integer.parseInt(args[0]));
+            server.start();
         }
     }
 

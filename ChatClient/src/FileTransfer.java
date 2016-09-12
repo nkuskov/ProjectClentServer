@@ -25,18 +25,8 @@ public class FileTransfer implements Runnable {
         chatClientThread = _chatClientThread;
         socket = _socket;
         fileLength = _fileLength;
-        open();
-        start();
     }
 
-    public void open(){
-        try {
-            fileIn = socket.getInputStream();
-        }
-        catch (IOException e){
-
-        }
-    }
 
 
     public void start(){
@@ -52,15 +42,19 @@ public class FileTransfer implements Runnable {
         try {
 //            client.handle("Write your filepath: ");
 //            filePath = client.streamIn.readLine();
+            fileIn = socket.getInputStream();
             byteArray = new byte[fileLength];// taking fileLength from splited msg
-            chatClientThread.fileIn.read(byteArray,0,byteArray.length); // write to bytearray from StreamIn
+            fileIn.read(byteArray,0,byteArray.length); // write to bytearray from StreamIn
             fileOut = new BufferedOutputStream(new FileOutputStream(filePath));
             fileOut.write(byteArray,0,byteArray.length);// write form byteArray to new file
             fileOut.flush();
             client.handle("File " + filePath + "writed with " + byteArray.length + " bytes size.");
-            chatClientThread.file = false;
-            fileIn.close();
+
             fileOut.close();
+            socket.shutdownInput();
+            client.open();
+            chatClientThread.open();
+            chatClientThread.file = false;
 
 
 
