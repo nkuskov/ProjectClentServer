@@ -31,6 +31,7 @@ public class ChatServerThread extends Thread {
 
     public void splitMsg(String msg) throws IOException {  //split income message for send correct command
         String[] split = msg.split(" ");
+        server.systemMessage("spliting message \"" + msg + "\" from <" +name + ">");
         if(split[0].equalsIgnoreCase("-") && split[1].equalsIgnoreCase("clients")){ // send ClientsMap
             server.clientsMap(name);
             System.out.println("command " + split[1]);
@@ -54,6 +55,7 @@ public class ChatServerThread extends Thread {
         }
         if(split[0].equalsIgnoreCase("-") && split[1].equalsIgnoreCase("file")){ // for sending file.
             if(clientName != null){
+                server.handle(name,"File " + split[2] + " start sending...");
                 server.fileTransfer(clientName, split[2]);
             }
         }
@@ -61,22 +63,31 @@ public class ChatServerThread extends Thread {
 
     public void fileTransfer(String fileName){  // Sending file
         try{
+
             File myFile = new File(fileName);  // create new File
+            server.handle(name,"Start \"" + fileName + "\" file sending...");
             byte[] byteArray = new byte[(int)myFile.length()]; // create byte[]
             fileInStream = new BufferedInputStream(new FileInputStream(myFile)); // open IO streams
             fileInStream.read(byteArray,0,byteArray.length); // write file to byte[]
-            send("Sending " + myFile.getAbsolutePath());
+            server.handle(name,"Sending " + myFile.getAbsolutePath());
             streamOut.writeUTF("- getfile " + byteArray.length);
             fileOutStream = socket.getOutputStream();
             fileOutStream.write(byteArray,0,byteArray.length);//send file to streamOut from byte[]
             fileOutStream.flush();
-            send("File " + myFile.getAbsolutePath()+" transfered with " + byteArray.length + " bytes size");
-            if(fileInStream != null) fileInStream.close();
-            if(fileOutStream != null) fileOutStream.close();
+            open();
+            server.handle(name,"File " + myFile.getAbsolutePath()+" transfered with " + byteArray.length + " bytes size");
+            if(socket == null) server.systemMessage("Socket is closed");
         }
         catch (Exception e){
-            System.out.println("Write correct filepath");
+            try {
+                splitMsg("Write correct file path");
+            }
+            catch (IOException ex){
+
+            }
+            server.systemMessage("FileTransfer failed");
         }
+
     }
 
 
@@ -87,29 +98,39 @@ public class ChatServerThread extends Thread {
         streamOut.flush();
     }
 
-    public void run(){  // if you dont choose to whome you will send message,
-        while(true) {   // you shoud write "- nickname message"
+    public void run(){  // if you don't choose to whom you will send message,
+        while(true) {   // you should write "- nickname message"
             if (this.name == null) {
                 try {
                     this.name = streamIn.readUTF();
                     System.out.println(socket + " nickname is: " + this.name);
                 } catch (IOException e) {
-
+                    server.systemMessage("readUTF for [tacking name] in ChatServerThread doesn't work");
                 }
             }
             try{
                 splitMsg(streamIn.readUTF());
             }
             catch (IOException e){
+                if(socket == null){
+                    server.systemMessage("socket is closed");
+                }
+                server.systemMessage("readUTF for [split msg] in ChatServerThread doesn't work");
+
 
             }
         }
 
     }
 
-    public void open() throws IOException {
-        streamIn = new DataInputStream(socket.getInputStream());
-        streamOut = new DataOutputStream(socket.getOutputStream());
+    public void open() {
+        try {
+            streamIn = new DataInputStream(socket.getInputStream());
+            streamOut = new DataOutputStream(socket.getOutputStream());
+        }
+        catch (IOException e){
+            server.systemMessage("Can't open streams in ChatServerThread");
+        }
 
     }
 

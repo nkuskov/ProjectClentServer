@@ -19,9 +19,15 @@ public class ChatClientThread extends Thread {
 
 
 
-    public void open() throws IOException {
-        streamIn = new DataInputStream(socket.getInputStream());
+    public void open(){
+        try {
+            streamIn = new DataInputStream(socket.getInputStream());
+        }
+        catch (IOException e){
+            client.systemMessage("Can't open stream in ChatClientThread");
+        }
          // only for filetransfering
+
     }
 
     public void run(){
@@ -33,6 +39,7 @@ public class ChatClientThread extends Thread {
 
             } catch (IOException e) {
                 e.printStackTrace();
+                client.systemMessage("Can't readUTF in ChatClient");
             }
         }
 

@@ -15,7 +15,16 @@ public class ChatClient implements Runnable {
     ChatClient(String serverName, int serverPort) throws IOException { //Create new Socket and start Thread
         socket = new Socket(serverName, serverPort);
         System.out.println("Connected: " + socket);
+        using();
         System.out.print("Write your nickname: ");
+
+    }
+
+    public void using(){
+        System.out.println("Using of chat: \n " +
+                            "\"- nickname message\" (after that you will send message to this client) \n " +
+                            "\"- file filepath\" (you will send file to chose client)\n " +
+                            "\"- clients\" (will show you list of clients)\n ");
     }
 
     public void open(){
@@ -24,6 +33,7 @@ public class ChatClient implements Runnable {
             streamOut = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("Can't open streams");
         }
     }
 
@@ -37,6 +47,9 @@ public class ChatClient implements Runnable {
         }
     }
 
+    public void systemMessage(String msg){
+        System.out.println(msg);
+    }
 
 
     public void handle(String msg) throws IOException { //split msg and start file transfer by creating FileTransfer
@@ -46,6 +59,7 @@ public class ChatClient implements Runnable {
             client.file = true;
             fileTransfer = new FileTransfer(this, client, socket, Integer.parseInt(splited[2]));
             fileTransfer.start();
+
         }
         else {
             System.out.println(msg);
@@ -62,6 +76,7 @@ public class ChatClient implements Runnable {
                 streamOut.flush();
             } catch (IOException e) {
                 e.printStackTrace();
+                System.out.println("Can't writeUTF");
             }
         }
 
@@ -70,7 +85,7 @@ public class ChatClient implements Runnable {
     public static void main(String[] args) throws IOException {
         ChatClient client = null;
         if(args.length<2){
-            System.out.println("Usage: jaav ChatClient server port");
+            System.out.println("Usage: java ChatClient server port");
         }
         else {
             client =new ChatClient(args[0],Integer.parseInt(args[1]));

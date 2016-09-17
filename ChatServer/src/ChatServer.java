@@ -66,12 +66,18 @@ public class ChatServer implements Runnable{
         }
     }
 
+    public void systemMessage(String msg){
+        System.out.println(msg);
+    }
+
     public synchronized void handle(String name, String input){  //send message to current client
+        System.out.println("Sending message to <" + name + ">...");
         try{
             clients[findClient(name)].send(input);
+            System.out.println("Message to <" + name + "> sent.");
         }
         catch (IOException e){
-
+            System.out.println("Can't send message to [" + name + "]");
         }
 
     }

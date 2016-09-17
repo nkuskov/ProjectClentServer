@@ -15,7 +15,7 @@ public class FileTransfer implements Runnable {
     byte[] byteArray = null;
     Integer fileLength = 0;
     ChatClient client = null;
-    String filePath = "./World.txt";
+    String filePath = "d:/Education/Java/SuperServer/World.txt";
     ChatClientThread chatClientThread = null;
 
 
@@ -42,17 +42,22 @@ public class FileTransfer implements Runnable {
         try {
 //            client.handle("Write your filepath: ");
 //            filePath = client.streamIn.readLine();
+            client.systemMessage("Start file sending");
             fileIn = socket.getInputStream();
             byteArray = new byte[fileLength];// taking fileLength from splited msg
             fileIn.read(byteArray,0,byteArray.length); // write to bytearray from StreamIn
             fileOut = new BufferedOutputStream(new FileOutputStream(filePath));
             fileOut.write(byteArray,0,byteArray.length);// write form byteArray to new file
             fileOut.flush();
-            client.handle("File " + filePath + "writed with " + byteArray.length + " bytes size.");
-
+            client.handle("File " + filePath + " writed with " + byteArray.length + " bytes size.");
+            client.systemMessage("File sending done.");
             fileOut.close();
             socket.shutdownInput();
+
             client.open();
+            if(socket == null){
+                client.systemMessage("socket = null!!");
+            }
             chatClientThread.open();
             chatClientThread.file = false;
 
