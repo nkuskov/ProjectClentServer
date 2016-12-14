@@ -13,9 +13,8 @@ public class ChatServerThread extends Thread {
     ChatServer server = null;
     String name = null;
     String clientName = null;
-    String fileName = null;
     BufferedInputStream fileInStream = null;
-    OutputStream fileOutStream = null;
+    BufferedOutputStream buffOut = null;
 
 
 
@@ -32,6 +31,9 @@ public class ChatServerThread extends Thread {
     public void splitMsg(String msg) throws IOException {  //split income message for send correct command
         String[] split = msg.split(" ");
         server.systemMessage("spliting message \"" + msg + "\" from <" +name + ">");
+        if (msg.equalsIgnoreCase("- bye")){
+            server.handle(name,msg);
+        }
         if(split[0].equalsIgnoreCase("-") && split[1].equalsIgnoreCase("clients")){ // send ClientsMap
             server.clientsMap(name);
             System.out.println("command " + split[1]);
@@ -63,7 +65,6 @@ public class ChatServerThread extends Thread {
 
     public void fileTransfer(String fileName){  // Sending file
         try{
-
             File myFile = new File(fileName);  // create new File
             server.handle(name,"Start \"" + fileName + "\" file sending...");
             byte[] byteArray = new byte[(int)myFile.length()]; // create byte[]
@@ -71,12 +72,10 @@ public class ChatServerThread extends Thread {
             fileInStream.read(byteArray,0,byteArray.length); // write file to byte[]
             server.handle(name,"Sending " + myFile.getAbsolutePath());
             streamOut.writeUTF("- getfile " + byteArray.length);
-            fileOutStream = socket.getOutputStream();
-            fileOutStream.write(byteArray,0,byteArray.length);//send file to streamOut from byte[]
-            fileOutStream.flush();
-            open();
+            buffOut.write(byteArray,0,byteArray.length);//send file to streamOut from byte[]
+            buffOut.flush();
+            fileInStream.close();
             server.handle(name,"File " + myFile.getAbsolutePath()+" transfered with " + byteArray.length + " bytes size");
-            if(socket == null) server.systemMessage("Socket is closed");
         }
         catch (Exception e){
             try {
@@ -127,10 +126,19 @@ public class ChatServerThread extends Thread {
         try {
             streamIn = new DataInputStream(socket.getInputStream());
             streamOut = new DataOutputStream(socket.getOutputStream());
+            buffOut = new BufferedOutputStream(socket.getOutputStream());
         }
         catch (IOException e){
             server.systemMessage("Can't open streams in ChatServerThread");
         }
+
+    }
+
+    public void close() throws IOException {
+        if(socket != null) socket.close();
+        if(streamIn != null) streamIn.close();
+        if(streamOut != null) streamOut.close();
+        if(buffOut != null) buffOut.close();
 
     }
 

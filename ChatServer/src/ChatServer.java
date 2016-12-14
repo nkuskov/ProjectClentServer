@@ -12,7 +12,6 @@ public class ChatServer implements Runnable{
     private ServerSocket server = null;
     private Thread thread = null;
     private int clientCount = 0;
-    String chatUsing = "Using - nickname message";
 
     public ChatServer(int port){ //constructor create ServerSocket and start Thread for adding new Sockets
         try{
@@ -72,6 +71,15 @@ public class ChatServer implements Runnable{
 
     public synchronized void handle(String name, String input){  //send message to current client
         System.out.println("Sending message to <" + name + ">...");
+        if(input.equalsIgnoreCase("- bye")){
+            try {
+                clients[findClient(name)].send(input);
+                remove(name);
+            }
+            catch (IOException ioe){
+
+            }
+        }
         try{
             clients[findClient(name)].send(input);
             System.out.println("Message to <" + name + "> sent.");
@@ -82,33 +90,32 @@ public class ChatServer implements Runnable{
 
     }
 
-    public synchronized void fileTransfer(String name, String file){ // transfer file to current client
+    public synchronized void fileTransfer(String name, String file) // transfer file to current client
+    {
         clients[findClient(name)].fileTransfer(file);
     }
 
-//    public synchronized void remove(int ID){
-//        int pos = findClient(ID);
-//        if (pos>=0){
-//            ChatServerThread toTerminate = clients[pos];
-//            System.out.println("Removing client thread" + ID + " at" + pos);
-//            if(pos<clientCount - 1){
-//                for (int i = pos+1; i < clientCount; i++) {
-//                    clients[i-1] = clients[i];
-//
-//                }
-//            }
-//            clientCount--;
-//            try{
-//                toTerminate.close();
-//            }
-//            catch (Exception e){
-//                System.out.println(e);
-//                toTerminate.stop();
-//            }
-//
-//        }
-//    }
+    public synchronized void remove(String name){
+        int pos = findClient(name);
+        if(pos>=0){
+            ChatServerThread toTerminate = clients[pos];
+            System.out.println("Removing client [" + name + "]...");
+            if(pos < clientCount-1){
+                for (int i = pos+1; i < clientCount; i++) {
+                    clients[i-1] = clients[i];
+                }
+            }
+            clientCount--;
+            try{
+                toTerminate.close();
+            }
+            catch (IOException ioe){
+                System.out.println("Error closing thread: " + ioe);
+            }
+            toTerminate.stop();
+        }
 
+    }
 
 
     public void addThread(Socket socket){  // create massive with clients by adding new Sockets on it
